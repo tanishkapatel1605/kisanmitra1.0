@@ -12,8 +12,7 @@ from groq import Groq
 #  CONFIG — paste your Groq key here
 # ─────────────────────────────────────────────
 
-GROQ_API_KEY = "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" 
-
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 # ─────────────────────────────────────────────
 #  PAGE CONFIG
 # ─────────────────────────────────────────────
@@ -26,7 +25,7 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────
-#  CSS + JS (Single Enter to Send Fix)
+#  CSS + JS (Fixed Chat Layout & Simplified Input)
 # ─────────────────────────────────────────────
 
 st.markdown("""
@@ -146,17 +145,23 @@ st.markdown("""
     font-size: 0.75rem; color: #cbd5e1;
 }
 
-/* ── chat messages ── */
+/* ── chat messages (FIXED COMPRESSION DISTORTION) ── */
 .km-msg-user {
     display: flex; justify-content: flex-end;
-    margin: 12px 0;
+    margin: 12px 0; width: 100%;
 }
 .km-msg-bot {
     display: flex; justify-content: flex-start;
-    margin: 12px 0;
+    margin: 12px 0; width: 100%;
+}
+.km-user-container {
+    display: flex; flex-direction: column; align-items: flex-end; width: 85%;
+}
+.km-bot-container {
+    display: flex; flex-direction: column; align-items: flex-start; width: 85%;
 }
 .km-bubble-user {
-    max-width: 75%;
+    width: 100%; text-align: left;
     background: linear-gradient(135deg, #312e81, #4338ca);
     border: 1px solid rgba(99, 102, 241, 0.3);
     border-radius: 18px 18px 4px 18px;
@@ -166,7 +171,7 @@ st.markdown("""
     line-height: 1.6;
 }
 .km-bubble-bot {
-    max-width: 80%;
+    width: 100%;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 18px 18px 18px 4px;
@@ -194,57 +199,63 @@ st.markdown("""
     margin-bottom: 4px; text-align: right;
 }
 
-/* ── sleek dynamic input box ── */
-[data-testid="stForm"] {
-    background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(99, 102, 241, 0.2) !important;
-    border-radius: 16px !important;
-    padding: 12px 16px !important;
-    margin-top: 24px;
-    transition: all 0.2s ease-in-out;
+/* ── input area ── */
+.km-input-wrap {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 16px;
+    padding: 4px 4px 4px 16px;
+    display: flex; align-items: flex-end; gap: 8px;
+    margin-top: 8px;
+    transition: border-color 0.2s;
 }
-[data-testid="stForm"]:focus-within {
-    border-color: rgba(6, 182, 212, 0.5) !important;
-    box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
+.km-input-wrap:focus-within {
+    border-color: rgba(99, 102, 241, 0.5);
 }
+.stTextArea { flex: 1; }
 .stTextArea textarea {
     background: transparent !important;
     color: #f1f5f9 !important;
     border: none !important;
+    border-radius: 0 !important;
     font-family: 'Space Grotesk', sans-serif !important;
-    font-size: 0.98rem !important;
-    padding: 0 !important;
+    font-size: 0.95rem !important;
+    padding: 10px 4px !important; /* Added nice inner placeholder text padding */
     resize: none !important;
     box-shadow: none !important;
-    min-height: 40px !important;
+    min-height: 44px !important;
 }
-.stTextArea label { display: none !important; }
+.stTextArea textarea:focus {
+    box-shadow: none !important;
+    border: none !important;
+}
 .stTextArea textarea::placeholder { color: #475569 !important; }
+.stTextArea label { display: none !important; }
 
-/* ── sleek bottom utility row ── */
-.input-utilities {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
+/* ── buttons ── */
 .stButton > button {
-    background: rgba(99, 102, 241, 0.1) !important;
+    background: rgba(99, 102, 241, 0.12) !important;
     color: #818cf8 !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important;
-    border-radius: 8px !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    border-radius: 10px !important;
     font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.78rem !important;
-    padding: 4px 14px !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
     transition: all 0.15s !important;
+    letter-spacing: 0.05em !important;
 }
 .stButton > button:hover {
-    background: rgba(99, 102, 241, 0.2) !important;
-    border-color: rgba(6, 182, 212, 0.5) !important;
-    color: #22d3ee !important;
+    background: rgba(99, 102, 241, 0.25) !important;
+    border-color: rgba(99, 102, 241, 0.6) !important;
+    color: #c7d2fe !important;
+}
+
+/* ── form ── */
+[data-testid="stForm"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
 /* ── hint ── */
@@ -302,14 +313,17 @@ document.addEventListener('keydown', function(e) {
         const textarea = document.querySelector('textarea');
         if (textarea && document.activeElement === textarea) {
             e.preventDefault();
-            // Trace the parent Form element component wrapper and dispatch submit sequence
-            const form = textarea.closest('form');
-            if (form) {
-                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            // find and click the Send button
+            const btns = document.querySelectorAll('button');
+            for (let b of btns) {
+                if (b.innerText.includes('Send')) {
+                    b.click();
+                    break;
+                }
             }
         }
     }
-}, true);
+});
 </script>
 """, unsafe_allow_html=True)
 
@@ -440,7 +454,7 @@ for msg in st.session_state.messages:
     if msg["role"] == "user":
         st.markdown(f"""
         <div class="km-msg-user">
-            <div>
+            <div class="km-user-container">
                 <div class="km-user-label">You</div>
                 <div class="km-bubble-user">{msg["content"]}</div>
             </div>
@@ -449,37 +463,35 @@ for msg in st.session_state.messages:
         content_html = msg["content"].replace("\n", "<br>")
         st.markdown(f"""
         <div class="km-msg-bot">
-            <div class="km-bubble-bot">
-                <div class="km-bot-label"><div class="km-bot-label-dot"></div>KisanMitra</div>
-                {content_html}
+            <div class="km-bot-container">
+                <div class="km-bubble-bot">
+                    <div class="km-bot-label"><div class="km-bot-label-dot"></div>KisanMitra</div>
+                    {content_html}
+                </div>
             </div>
         </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-#  INPUT WITH SLEEK INTEGRATED LAYOUT
+#  INPUT
 # ─────────────────────────────────────────────
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 with st.form(key="chat_form", clear_on_submit=True):
-    user_input = st.text_area(
-        "msg",
-        placeholder="Ask about crops, soil, pests, schemes... (Press Enter to send, Shift+Enter for new line)",
-        height=44,
-        label_visibility="collapsed"
-    )
-    
-    # Utilities row inside the box container boundary
-    st.markdown('<div class="input-utilities">', unsafe_allow_html=True)
-    btn_col1, btn_col2 = st.columns([1, 6])
-    with btn_col1:
-        new_chat = st.form_submit_button("↺ New Chat")
-    with btn_col2:
-        # Invisible form submit anchor fallback for script trigger targets
-        submitted = st.form_submit_button("Send ➤")
-    st.markdown('</div>', unsafe_allow_html=True)
+    col_input, col_btn, col_new = st.columns([6, 1, 1])
+    with col_input:
+        user_input = st.text_area(
+            "msg",
+            placeholder="Ask about crops, soil, pests, schemes...",
+            height=52,
+            label_visibility="collapsed"
+        )
+    with col_btn:
+        submitted = st.form_submit_button("Send ➤", use_container_width=True)
+    with col_new:
+        new_chat = st.form_submit_button("↺ New", use_container_width=True)
 
-st.markdown('<div class="km-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line &nbsp;·&nbsp; Hindi supported</div>', unsafe_allow_html=True)
+st.markdown('<div class="km-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line &nbsp;·&nbsp; Hindi supported</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 #  HANDLE ACTIONS
